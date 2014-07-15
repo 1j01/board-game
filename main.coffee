@@ -287,16 +287,19 @@ document.body.onmousedown = (e)->
 
 ########
 
-overlay_message = document.createElement 'div'
-document.body.appendChild overlay_message
-overlay_message.id = "overlay-message"
+overlay = document.createElement 'div'
+document.body.appendChild overlay
+overlay.id = "overlay"
+
+overlay_text = document.createElement 'h2'
+overlay.appendChild overlay_text
+
+overlay_subtext = document.createElement 'p'
+overlay.appendChild overlay_subtext
+
 msg = (text, subtext)->
-	if text
-		overlay_message.className = "show"
-		overlay_message.innerHTML = text + "<p>#{subtext ? ""}</p>"
-	else
-		overlay_message.className = ""
-		overlay_message.innerHTML = ""
+	overlay_text.innerHTML = text ? ""
+	overlay_subtext.innerHTML = subtext ? ""
 
 #=========#
 #   ...   #
