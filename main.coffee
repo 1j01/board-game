@@ -277,8 +277,13 @@ document.body.onmousedown = (e)->
 		#o.setLinearVelocity(force)
 		
 		p = o.piece
-		p.move(p.xi, p.yi+1)
-
+		if p.team is team
+			if p.team is 2
+				p.move(p.xi, p.yi-1)
+			else
+				p.move(p.xi, p.yi+1)
+		else
+			alert 'wraong team brao'
 
 ########
 
@@ -305,6 +310,8 @@ for xi in [0...tiles_x]
 	team_2_pieces.push new Piece(2).position(xi, tiles_y-1)
 pieces = team_1_pieces.concat team_2_pieces
 
+team = -1
+my_team_pieces = []
 
 socket = io.connect location.origin
 msg 'Connecting...'
@@ -326,13 +333,22 @@ socket.on 'your-turn', ->
 	# http://localhost:8080/#I_AM_AN_INSANE_ROUGE_AI
 	if location.hash.match /ai/i
 		setTimeout ->
-			pieces[~~(Math.random()*pieces.length)].move(~~(Math.random() * tiles_x), ~~(Math.random() * tiles_y))
+			p = my_team_pieces[~~(Math.random()*my_team_pieces.length)]
+			p.move(
+				~~(Math.random() * tiles_x)
+				~~(Math.random() * tiles_y)
+			)
 		, 500
 
 socket.on 'room-already-full', ->
 	msg 'There are already two players.', yes
 
-socket.on 'you-join', ->
+socket.on 'you-join', (t)->
+	team = t
+	my_team_pieces = switch t
+		when 1 then team_1_pieces
+		when 2 then team_2_pieces
+	
 	msg 'Waiting for other player...'
 
 socket.on 'other-disconnected', ->
