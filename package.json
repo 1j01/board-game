@@ -1,0 +1,12 @@
+{
+	"name": "boardgame",
+	"description": "Unlock the secret treasure! Swipe to remove blocks and watch your enemies fall!",
+	"dependencies": {
+		"socket.io": "0.9.17",
+		"express": "4.3.1",
+		"coffeescript": "1.7.1"
+	},
+	"scripts": {
+		"start": "coffee server.coffee"
+	}
+}

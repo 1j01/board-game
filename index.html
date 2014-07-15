@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>A Board Game</title>
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style type="text/css">
+		html, body {
+			padding: 0;
+			margin: 0;
+			border: 0;
+			overflow: hidden;
+			font-family: Helvetica, sans-serif;
+			background: black;
+		}
+		#overlay-message {
+			pointer-events: none;
+			position: absolute;
+			left: 0;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			//background: rgba(0, 0, 0, 0.4);
+			text-align: center;
+			font-size: 2em;
+			color: white;
+			text-shadow: 0 0 5px gray;
+			display: none;
+		}
+		#overlay-message.show {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<script src="./lib/Three.js"></script>
+	<script src="./lib/Detector.js"></script>
+	<script src="./lib/OrbitControls.js"></script>
+	<script src="./lib/physi.js"></script>
+	<script src="./lib/howler.min.js"></script>
+	<script src="./lib/coffee-script.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="main.coffee" type="text/coffeescript"></script>
+</body>
+</html>
