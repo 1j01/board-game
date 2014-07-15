@@ -320,6 +320,9 @@ pieces = team_1_pieces.concat team_2_pieces
 
 
 space_occupied = (xi, yi)->
+	if xi < 0 or yi < 0 or xi >= tiles_x or yi >= tiles_y
+		return yes # out of bounds
+	
 	well_is_it = no
 	
 	for p in pieces
