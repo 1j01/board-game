@@ -9,6 +9,14 @@ rand = (x)-> Math.random()*x
 
 ###################################
 
+my_team = -1
+my_team_pieces = []
+it_is_your_turn = false
+you_got_kicked_bro = false
+op_disconnected = false
+
+###################################
+
 tiles_x = 10
 tiles_y = 14
 
@@ -25,8 +33,6 @@ board_height = spaced_tile_length * tiles_y
 get_tile_x = (xi)-> (xi+.5) * spaced_tile_length - board_width/2
 get_tile_y = (yi)-> (yi+.5) * spaced_tile_length - board_height/2
 
-###################################
-# SETUP
 ###################################
 
 # relative to this file
@@ -204,8 +210,13 @@ class Piece
 	
 	move: (xi, yi)->
 		# moves the piece, sending the update to the server
-		socket.emit 'position', {pi: pieces.indexOf(@), xi, yi}
-		@position xi, yi
+		if it_is_your_turn and not space_occupied(xi, yi)
+			
+			socket.emit 'position', {pi: pieces.indexOf(@), xi, yi}
+			it_is_your_turn = false
+			
+			@position xi, yi
+		
 		@
 	
 	update: ->
@@ -269,7 +280,7 @@ document.body.onmousedown = (e)->
 		#o.setLinearVelocity(force)
 		
 		p = o.piece
-		if p.team is team
+		if p.team is my_team
 			if p.team is 2
 				unless space_occupied(p.xi, p.yi-1)
 					p.move(p.xi, p.yi-1)
@@ -279,7 +290,7 @@ document.body.onmousedown = (e)->
 		else
 			msg "You're the other team."
 
-########
+###################################
 
 overlay = document.createElement 'div'
 document.body.appendChild overlay
@@ -307,9 +318,6 @@ for xi in [0...tiles_x]
 	team_2_pieces.push new Piece(2).position(xi, tiles_y-1)
 pieces = team_1_pieces.concat team_2_pieces
 
-team = -1
-my_team_pieces = []
-it_is_your_turn = false
 
 space_occupied = (xi, yi)->
 	well_is_it = no
@@ -329,11 +337,15 @@ socket.on 'position', ({pi, xi, yi})->
 
 
 socket.on 'other-turn', ->
-	msg 'Other player\'s turn...'
 	it_is_your_turn = false
+	
+	unless op_disconnected
+		msg 'Other player\'s turn...'
 
 socket.on 'your-turn', ->
-	msg 'Your turn...'
+	unless op_disconnected
+		msg 'Your turn...'
+	
 	it_is_your_turn = true
 	
 	# http://localhost:8080/#I_AM_AN_INSANE_ROUGE_AI
@@ -350,9 +362,9 @@ socket.on 'your-turn', ->
 			p.move(xi, yi)
 		, 500
 
-socket.on 'you-join', (t)->
-	team = t
-	my_team_pieces = switch t
+socket.on 'you-join', (team)->
+	my_team = team
+	my_team_pieces = switch my_team
 		when 1 then team_1_pieces
 		when 2 then team_2_pieces
 	
@@ -360,8 +372,8 @@ socket.on 'you-join', (t)->
 
 socket.on 'other-disconnected', ->
 	msg 'Other player disconnected!'
+	op_disconnected = true
 
-you_got_kicked_bro = false
 socket.on 'room-already-full', ->
 	msg 'There are already two players.', 'Or there were. The server currently only handles one game and two connections, ever.'
 	you_got_kicked_bro = true
