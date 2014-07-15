@@ -162,13 +162,6 @@ class Piece
 		material = (if @team is 1 then team_1_material else team_2_material)
 		
 		u = 0.1
-		###points = [
-			new V2(-u/2, 0)
-			new V2(-u, 0)
-			new V2(0, u)
-			new V2(u, 0)
-			new V2(u/2, 0)
-		]###
 		
 		points = [
 			new V2(-u, 0)
@@ -194,11 +187,7 @@ class Piece
 		
 		@mesh = new T.Mesh(geometry, material)
 		
-		###@mesh = new P.BoxMesh(
-			new T.BoxGeometry(tile_length/2, board_thickness, tile_length/2)
-			
-			1 # mass, 0 = static
-		)###
+		###@mesh = new P.ConvexMesh(geometry, material, 1)###
 
 		@mesh.receiveShadow = true
 		
@@ -207,24 +196,27 @@ class Piece
 		scene.add @mesh
 		all_piece_meshes.push @mesh
 	
-	position: (@xi_to, @yi_to)->
-		@xi ?= @xi_to
-		@yi ?= @yi_to
+	position: (@xi, @yi)->
+		# sets the position of the piece
+		@xi_lag ?= @xi
+		@yi_lag ?= @yi
 		@
 	
-	move: (xi_to, yi_to)->
-		socket.emit 'position', {pi: pieces.indexOf(@), xi: xi_to, yi: yi_to}
-		@position xi_to, yi_to
+	move: (xi, yi)->
+		# moves the piece, sending the update to the server
+		socket.emit 'position', {pi: pieces.indexOf(@), xi, yi}
+		@position xi, yi
 		@
 	
 	update: ->
+		# called every frame, animates the movement of the piece
 		slowness = 10
-		@xi += (@xi_to - @xi) / slowness
-		@yi += (@yi_to - @yi) / slowness
+		@xi_lag += (@xi - @xi_lag) / slowness
+		@yi_lag += (@yi - @yi_lag) / slowness
 		@mesh.position.set(
-			get_tile_x @xi
+			get_tile_x @xi_lag
 			7
-			get_tile_y @yi
+			get_tile_y @yi_lag
 		)
 		@
 
@@ -279,9 +271,11 @@ document.body.onmousedown = (e)->
 		p = o.piece
 		if p.team is team
 			if p.team is 2
-				p.move(p.xi, p.yi-1)
+				unless space_occupied(p.xi, p.yi-1)
+					p.move(p.xi, p.yi-1)
 			else
-				p.move(p.xi, p.yi+1)
+				unless space_occupied(p.xi, p.yi+1)
+					p.move(p.xi, p.yi+1)
 		else
 			msg "You're the other team."
 
@@ -315,6 +309,16 @@ pieces = team_1_pieces.concat team_2_pieces
 
 team = -1
 my_team_pieces = []
+it_is_your_turn = false
+
+space_occupied = (xi, yi)->
+	well_is_it = no
+	
+	for p in pieces
+		if p.xi is xi and p.yi is yi
+			well_is_it = yes
+	
+	well_is_it
 
 socket = io.connect location.origin
 msg 'Connecting...'
@@ -323,7 +327,6 @@ socket.on 'position', ({pi, xi, yi})->
 	#console.log 'position', {pi, xi, yi}
 	pieces[pi].position(xi, yi)
 
-it_is_your_turn = false
 
 socket.on 'other-turn', ->
 	msg 'Other player\'s turn...'
@@ -337,10 +340,14 @@ socket.on 'your-turn', ->
 	if location.hash.match /ai/i
 		setTimeout ->
 			p = my_team_pieces[~~(Math.random()*my_team_pieces.length)]
-			p.move(
-				~~(Math.random() * tiles_x)
-				~~(Math.random() * tiles_y)
-			)
+			
+			xi = p.xi
+			yi = p.yi
+			while space_occupied(xi, yi)
+				xi = ~~(Math.random() * tiles_x)
+				yi = ~~(Math.random() * tiles_y)
+			
+			p.move(xi, yi)
 		, 500
 
 socket.on 'you-join', (t)->
