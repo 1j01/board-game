@@ -283,17 +283,17 @@ document.body.onmousedown = (e)->
 			else
 				p.move(p.xi, p.yi+1)
 		else
-			alert 'wraong team brao'
+			msg "You're the other team."
 
 ########
 
 overlay_message = document.createElement 'div'
 document.body.appendChild overlay_message
 overlay_message.id = "overlay-message"
-msg = (text)->
+msg = (text, subtext)->
 	if text
 		overlay_message.className = "show"
-		overlay_message.innerHTML = text
+		overlay_message.innerHTML = text + "<p>#{subtext ? ""}</p>"
 	else
 		overlay_message.className = ""
 		overlay_message.innerHTML = ""
@@ -340,9 +340,6 @@ socket.on 'your-turn', ->
 			)
 		, 500
 
-socket.on 'room-already-full', ->
-	msg 'There are already two players.', yes
-
 socket.on 'you-join', (t)->
 	team = t
 	my_team_pieces = switch t
@@ -353,6 +350,15 @@ socket.on 'you-join', (t)->
 
 socket.on 'other-disconnected', ->
 	msg 'Other player disconnected!'
+
+you_got_kicked_bro = false
+socket.on 'room-already-full', ->
+	msg 'There are already two players.', 'Or there were. The server currently only handles one game and two connections, ever.'
+	you_got_kicked_bro = true
+
+socket.on 'disconnect', ->
+	unless you_got_kicked_bro
+		msg 'You got disconnected!', 'This could be a problem with the server or your internet connection.'
 
 #=========#
 # ...GO!  #
