@@ -2,6 +2,7 @@
 TAU = Math.PI + Math.PI # or C/r
 T = THREE
 P = Physijs
+V2 = T.Vector2
 V3 = T.Vector3
 randy = (x)-> Math.random()*x-x/2
 rand = (x)-> Math.random()*x
@@ -158,15 +159,47 @@ class Piece
 			0.8 # high friction
 			0.3 # low restitution
 		)
+		material = (if @team is 1 then team_1_material else team_2_material)
 		
-		#shape = new T.Shape()
-		#console.log shape
+		u = 0.1
+		###points = [
+			new V2(-u/2, 0)
+			new V2(-u, 0)
+			new V2(0, u)
+			new V2(u, 0)
+			new V2(u/2, 0)
+		]###
 		
-		@mesh = new P.BoxMesh(
+		points = [
+			new V2(-u, 0)
+			new V2(-u, u/999)
+			new V2(0, u)
+			new V2(u, u/999)
+			new V2(u, 0)
+		]
+		
+		shape = new T.Shape(points)
+		
+		extrudeSettings =
+			amount: 2
+			steps: 1
+			#material: 1
+			#extrudeMaterial: 0
+			bevelEnabled: yes
+			bevelThickness: 1
+			bevelSize: 4
+			bevelSegments: 4
+		
+		geometry = new T.ExtrudeGeometry(shape, extrudeSettings)
+		
+		@mesh = new T.Mesh(geometry, material)
+		
+		###@mesh = new P.BoxMesh(
 			new T.BoxGeometry(tile_length/2, board_thickness, tile_length/2)
-			(if @team is 1 then team_1_material else team_2_material)
+			
 			1 # mass, 0 = static
-		)
+		)###
+
 		@mesh.receiveShadow = true
 		
 		@mesh.piece = @
@@ -177,11 +210,6 @@ class Piece
 	position: (@xi_to, @yi_to)->
 		@xi ?= @xi_to
 		@yi ?= @yi_to
-		@mesh.position.set(
-			get_tile_x @xi
-			4
-			get_tile_y @yi
-		)
 		@
 	
 	move: (xi_to, yi_to)->
@@ -195,7 +223,7 @@ class Piece
 		@yi += (@yi_to - @yi) / slowness
 		@mesh.position.set(
 			get_tile_x @xi
-			4
+			7
 			get_tile_y @yi
 		)
 		@
@@ -244,9 +272,9 @@ document.body.onmousedown = (e)->
 		e.stopPropagation()
 		
 		o = mouse.intersect.object
-		force = mouse.intersect.point.sub(o.position)
-		force.multiplyScalar(-30)
-		o.setLinearVelocity(force)
+		#force = mouse.intersect.point.sub(o.position)
+		#force.multiplyScalar(-30)
+		#o.setLinearVelocity(force)
 		
 		p = o.piece
 		p.move(p.xi, p.yi+1)
