@@ -226,8 +226,14 @@ class Piece
 		@yi_lag += (@yi - @yi_lag) / slowness
 		@mesh.position.set(
 			get_tile_x @xi_lag
-			7
+			5
 			get_tile_y @yi_lag
+		)
+		rotation = (@yi_lag + @xi_lag*5)
+		@mesh.rotation.set(
+			TAU/4
+			0
+			TAU/4 * rotation
 		)
 		@
 
