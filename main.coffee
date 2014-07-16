@@ -296,6 +296,10 @@ document.body.onmousedown = (e)->
 		else
 			msg "You're the other team."
 
+document.body.ontouchstart = (e)->
+	document.body.onmousemove(e)
+	document.body.onmousedown(e)
+
 ###################################
 
 overlay = document.createElement 'div'
