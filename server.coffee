@@ -3,12 +3,12 @@ express = require 'express'
 http = require 'http'
 socket_io = require 'socket.io'
 
-PORT = process.env.OPENSHIFT_NODEJS_PORT ? 8080
-IP = process.env.OPENSHIFT_NODEJS_IP ? '127.0.0.1'
+PORT = process.env.OPENSHIFT_NODEJS_PORT ? process.env.PORT ? 8080
+IP = process.env.OPENSHIFT_NODEJS_IP ? process.env.IP ? '127.0.0.1'
 
 app = express()
 server = app.listen(PORT, IP)
-console.log "Server listening on port #{PORT}"
+console.log "Server listening on http://#{IP}:#{PORT}/"
 
 io = socket_io.listen(server, {'log level': 2})
 
@@ -22,13 +22,13 @@ tiles_y = 14
 
 class Piece
 	constructor: (@team)->
-	position: (@xi, @yi)-> @
+	position: (@xi, @yi, @fx, @fy)-> @
 
 team_1_pieces = []
 team_2_pieces = []
 for xi in [0...tiles_x]
-	team_1_pieces.push new Piece(1).position(xi, 0)
-	team_2_pieces.push new Piece(2).position(xi, tiles_y-1)
+	team_1_pieces.push new Piece(1).position(xi, 0, 0, 1)
+	team_2_pieces.push new Piece(2).position(xi, tiles_y-1, 0, -1)
 pieces = team_1_pieces.concat team_2_pieces
 
 players = []
@@ -47,12 +47,11 @@ io.sockets.on 'connection', (socket)->
 	
 	socket.emit 'you-join', player.team
 	socket.broadcast.emit 'other-join', player.team
-	
-	socket.on 'position', ({pi, xi, yi})->
-		#console.log 'position', {pi, xi, yi}
-		pieces[pi].position(xi, yi)
-		socket.broadcast.emit 'position', {pi, xi, yi}
-		
+
+	socket.on 'position', ({pi, xi, yi, fx, fy})->
+		pieces[pi].position(xi, yi, fx, fy)
+		socket.broadcast.emit 'position', {pi, xi, yi, fx, fy}
+
 		socket.emit 'other-turn'
 		socket.broadcast.emit 'your-turn'
 	

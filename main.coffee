@@ -202,20 +202,24 @@ class Piece
 		scene.add @mesh
 		all_piece_meshes.push @mesh
 	
-	position: (@xi, @yi)->
+	position: (@xi, @yi, fx, fy)->
 		# sets the position of the piece
 		@xi_lag ?= @xi
 		@yi_lag ?= @yi
+		@fx = fx ? @fx
+		@fy = fy ? @fy
+		@fx_lag ?= @fx
+		@fy_lag ?= @fy
 		@
 	
-	move: (xi, yi)->
+	move: (xi, yi, fx, fy)->
 		# moves the piece, sending the update to the server
 		if it_is_your_turn and not space_occupied(xi, yi)
 			
-			socket.emit 'position', {pi: pieces.indexOf(@), xi, yi}
+			socket.emit 'position', {pi: pieces.indexOf(@), xi, yi, fx, fy}
 			it_is_your_turn = false
 			
-			@position xi, yi
+			@position xi, yi, fx, fy
 		
 		@
 	
@@ -224,16 +228,19 @@ class Piece
 		slowness = 10
 		@xi_lag += (@xi - @xi_lag) / slowness
 		@yi_lag += (@yi - @yi_lag) / slowness
+		@fx_lag += (@fx - @fx_lag) / slowness
+		@fy_lag += (@fy - @fy_lag) / slowness
 		@mesh.position.set(
 			get_tile_x @xi_lag
 			5
 			get_tile_y @yi_lag
 		)
-		rotation = (@yi_lag + @xi_lag*5)
+		rotation = Math.atan2(@fy_lag, @fx_lag)
 		@mesh.rotation.set(
 			TAU/4
 			0
-			TAU/4 * rotation
+			#TAU/4 - rotation
+			rotation - TAU/4
 		)
 		@
 
@@ -289,10 +296,10 @@ document.body.onmousedown = (e)->
 		if p.team is my_team
 			if p.team is 2
 				unless space_occupied(p.xi, p.yi-1)
-					p.move(p.xi, p.yi-1)
+					p.move(p.xi, p.yi-1, (~~(Math.random()*3))-1, -1)
 			else
 				unless space_occupied(p.xi, p.yi+1)
-					p.move(p.xi, p.yi+1)
+					p.move(p.xi, p.yi+1, (~~(Math.random()*3))-1, +1)
 		else
 			msg "You're the other team."
 
@@ -321,11 +328,12 @@ msg = (text, subtext)->
 #=========#
 
 board = new Board
+
 team_1_pieces = []
 team_2_pieces = []
 for xi in [0...tiles_x]
-	team_1_pieces.push new Piece(1).position(xi, 0)
-	team_2_pieces.push new Piece(2).position(xi, tiles_y-1)
+	team_1_pieces.push new Piece(1).position(xi, 0, 0, 1)
+	team_2_pieces.push new Piece(2).position(xi, tiles_y-1, 0, -1)
 pieces = team_1_pieces.concat team_2_pieces
 
 
@@ -344,9 +352,9 @@ space_occupied = (xi, yi)->
 socket = io.connect location.origin
 msg 'Connecting...'
 
-socket.on 'position', ({pi, xi, yi})->
+socket.on 'position', ({pi, xi, yi, fx, fy})->
 	#console.log 'position', {pi, xi, yi}
-	pieces[pi].position(xi, yi)
+	pieces[pi].position(xi, yi, fx, fy)
 
 
 socket.on 'other-turn', ->
@@ -372,7 +380,13 @@ socket.on 'your-turn', ->
 				xi = ~~(Math.random() * tiles_x)
 				yi = ~~(Math.random() * tiles_y)
 			
-			p.move(xi, yi)
+			fx = 0
+			fy = 0
+			while fx is 0 and fy is 0
+				fx = ~~(Math.random() * 3) - 1
+				fy = ~~(Math.random() * 3) - 1
+			
+			p.move(xi, yi, fx, fy)
 		, 500
 
 socket.on 'you-join', (team)->
