@@ -308,7 +308,7 @@ document.body.onmousedown = (e)->
 				unless space_occupied(p.xi, p.yi+1)
 					p.move(p.xi, p.yi+1, choose(-1, 0, +1), +1)
 		else
-			msg "You're the other team."
+			msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
 
 document.body.ontouchstart = (e)->
 	document.body.onmousemove(e)
