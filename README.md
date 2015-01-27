@@ -3,13 +3,17 @@
 
 * Player 1's turn
 	* Player 1 orients their pieces
+	
 	* Player 1 rolls the 2 dice
+	
 	* Player 1 makes their 2 moves
 
 
 * Player 2's turn
 	* Player 2 orients their pieces
+	
 	* Player 2 rolls the 2 dice
+	
 	* Player 2 makes their 2 moves
 
 
@@ -33,7 +37,8 @@ I'll make a table here later of all the moves.
 * :floppy_disk: Save games
 * :speech_balloon: Implement chat
 
-1. :question: :question: :question:
+
+1. :question::question::question:
 2. :package: ship it :shipit:
 3. :moneybag: PROFIT :dollar:
 
