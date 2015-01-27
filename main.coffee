@@ -4,8 +4,10 @@ T = THREE
 P = Physijs
 V2 = T.Vector2
 V3 = T.Vector3
-randy = (x)-> Math.random()*x-x/2
-rand = (x)-> Math.random()*x
+
+choose = (args...)->
+	arr = if args.length > 1 then args else args[0]
+	arr[~~(Math.random()*arr.length)]
 
 ###################################
 
@@ -216,8 +218,9 @@ class Piece
 		# moves the piece, sending the update to the server
 		if it_is_your_turn and not space_occupied(xi, yi)
 			
-			socket.emit 'position', {pi: pieces.indexOf(@), xi, yi, fx, fy}
-			it_is_your_turn = false
+			if socket?
+				socket.emit 'position', {pi: pieces.indexOf(@), xi, yi, fx, fy}
+				it_is_your_turn = false
 			
 			@position xi, yi, fx, fy
 		
@@ -282,6 +285,7 @@ document.body.onmousemove = (e)->
 		
 		document.body.style.cursor = "pointer"
 
+
 document.body.onmousedown = (e)->
 	if it_is_your_turn and mouse.intersect
 		e.preventDefault()
@@ -294,12 +298,15 @@ document.body.onmousedown = (e)->
 		
 		p = o.piece
 		if p.team is my_team
+			#if msg.is /yep/i then msg ""
+			#if msg.is /other team/i then msg "Yep, that's you."
+			if msg.is /other team/i then msg ""
 			if p.team is 2
 				unless space_occupied(p.xi, p.yi-1)
-					p.move(p.xi, p.yi-1, (~~(Math.random()*3))-1, -1)
+					p.move(p.xi, p.yi-1, choose(-1, 0, +1), -1)
 			else
 				unless space_occupied(p.xi, p.yi+1)
-					p.move(p.xi, p.yi+1, (~~(Math.random()*3))-1, +1)
+					p.move(p.xi, p.yi+1, choose(-1, 0, +1), +1)
 		else
 			msg "You're the other team."
 
@@ -322,6 +329,9 @@ overlay.appendChild overlay_subtext
 msg = (text, subtext)->
 	overlay_text.innerHTML = text ? ""
 	overlay_subtext.innerHTML = subtext ? ""
+
+msg.is = (text)->
+	overlay_text.innerHTML.match text
 
 #=========#
 #   ...   #
@@ -349,65 +359,75 @@ space_occupied = (xi, yi)->
 	
 	well_is_it
 
-socket = io.connect location.origin
-msg 'Connecting...'
-
-socket.on 'position', ({pi, xi, yi, fx, fy})->
-	#console.log 'position', {pi, xi, yi}
-	pieces[pi].position(xi, yi, fx, fy)
-
-
-socket.on 'other-turn', ->
-	it_is_your_turn = false
-	
-	unless op_disconnected
-		msg 'Other player\'s turn...'
-
-socket.on 'your-turn', ->
-	unless op_disconnected
-		msg 'Your turn...'
-	
-	it_is_your_turn = true
-	
-	# http://localhost:8080/#I_AM_AN_INSANE_ROUGE_AI
-	if location.hash.match /ai/i
-		setTimeout ->
-			p = my_team_pieces[~~(Math.random()*my_team_pieces.length)]
-			
-			xi = p.xi
-			yi = p.yi
-			while space_occupied(xi, yi)
-				xi = ~~(Math.random() * tiles_x)
-				yi = ~~(Math.random() * tiles_y)
-			
-			fx = 0
-			fy = 0
-			while fx is 0 and fy is 0
-				fx = ~~(Math.random() * 3) - 1
-				fy = ~~(Math.random() * 3) - 1
-			
-			p.move(xi, yi, fx, fy)
-		, 500
-
-socket.on 'you-join', (team)->
+assign_team = (team)->
 	my_team = team
 	my_team_pieces = switch my_team
 		when 1 then team_1_pieces
 		when 2 then team_2_pieces
+	# @TODO: orient view so your pieces are near you
+
+random_space = ->
+	xi: ~~(Math.random() * tiles_x)
+	yi: ~~(Math.random() * tiles_y)
 	
-	msg 'Waiting for other player...'
+random_free_space = ->
+	loop
+		{xi, yi} = random_space()
+		return {xi, yi} unless space_occupied(xi, yi)
 
-socket.on 'other-disconnected', ->
-	msg 'Other player disconnected!'
-	op_disconnected = true
+if io?
+	socket = io.connect location.origin
+	msg 'Connecting...'
 
-socket.on 'room-already-full', ->
-	msg 'There are already two players.', 'Or there were. The server currently only handles one game and two connections, ever.'
-	you_got_kicked_bro = true
+	socket.on 'position', ({pi, xi, yi, fx, fy})->
+		#console.log 'position', {pi, xi, yi}
+		pieces[pi].position(xi, yi, fx, fy)
 
-socket.on 'disconnect', ->
-	unless you_got_kicked_bro
-		msg 'You got disconnected!', 'This could be a problem with the server or your internet connection.'
+
+	socket.on 'other-turn', ->
+		it_is_your_turn = false
+		
+		unless op_disconnected
+			msg 'Other player\'s turn...'
+
+	socket.on 'your-turn', ->
+		unless op_disconnected
+			msg 'Your turn...'
+		
+		it_is_your_turn = true
+		
+		# http://localhost:8080/#I_AM_AN_INSANE_ROUGE_AI
+		if location.hash.match /ai/i
+			setTimeout ->
+				p = choose(my_team_pieces)
+				{xi, yi} = random_free_space()
+				facing_x = choose(-1, +1)
+				facing_y = choose(-1, +1)
+				
+				p.move(xi, yi, facing_x, facing_y)
+			, 500
+
+	socket.on 'you-join', (team)->
+		assign_team(team)
+		msg 'Waiting for other player...'
+
+	socket.on 'other-disconnected', ->
+		msg 'Other player disconnected!'
+		op_disconnected = true
+
+	socket.on 'room-already-full', ->
+		msg 'There are already two players.', 'Or there were. The server currently only handles one game and two connections, ever.'
+		you_got_kicked_bro = true
+
+	socket.on 'disconnect', ->
+		unless you_got_kicked_bro
+			msg 'You got disconnected!', 'This could be a problem with the server or your internet connection.'
+ 
+else
+	msg "There's no game server here", "(but you can see the 3d stuff hopefully)"
+	# so you can still interact with some pieces...
+	assign_team 1
+	it_is_your_turn = true
 
 #=========#
 # ...GO!  #

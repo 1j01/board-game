@@ -32,8 +32,7 @@ for xi in [0...tiles_x]
 pieces = team_1_pieces.concat team_2_pieces
 
 players = []
-turn = 1
-game = off
+game = off # wait for it...
 
 io.sockets.on 'connection', (socket)->
 	
@@ -68,5 +67,5 @@ io.sockets.on 'connection', (socket)->
 			socket.broadcast.emit 'your-turn'
 			socket.emit 'other-turn'
 		
-		game = on
+		game = on # YEAH
 			
