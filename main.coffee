@@ -364,7 +364,9 @@ assign_team = (team)->
 	my_team_pieces = switch my_team
 		when 1 then team_1_pieces
 		when 2 then team_2_pieces
-	# @TODO: orient view so your pieces are near you
+	
+	camera.position.set(0, 100, 200 * [0,-1,+1][my_team])
+	camera.lookAt(scene.position)
 
 random_space = ->
 	xi: ~~(Math.random() * tiles_x)
@@ -426,7 +428,7 @@ if io?
 else
 	msg "There's no game server here", "(but you can see the 3d stuff hopefully)"
 	# so you can still interact with some pieces...
-	assign_team 1
+	assign_team(choose(1, 2))
 	it_is_your_turn = true
 
 #=========#

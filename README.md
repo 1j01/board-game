@@ -23,8 +23,6 @@ Some moves can remove a piece at "full health" immediately.
 
 * :muscle: Lift the pieces up when moving them :point_up:
 
-* :movie_camera: Orient the view when a team is assigned
-
 * :high_brightness: Improve lighting :bulb:
 
 * :game_die: Add dice!
