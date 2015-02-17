@@ -156,18 +156,11 @@ class Board
 all_piece_meshes = []
 class Piece
 	constructor: (@team)->
-		
-		team_1_material = P.createMaterial(
-			new T.MeshPhongMaterial(color: 0xFF5D5E)
+		material = P.createMaterial(
+			new T.MeshPhongMaterial(color: if @team is 1 then 0xFF5D5E else 0x432FFF)
 			0.8 # high friction
 			0.3 # low restitution
 		)
-		team_2_material = P.createMaterial(
-			new T.MeshPhongMaterial(color: 0x432FFF)
-			0.8 # high friction
-			0.3 # low restitution
-		)
-		material = (if @team is 1 then team_1_material else team_2_material)
 		
 		u = 0.1
 		
@@ -242,7 +235,6 @@ class Piece
 		@mesh.rotation.set(
 			TAU/4
 			0
-			#TAU/4 - rotation
 			rotation - TAU/4
 		)
 		@
@@ -265,7 +257,6 @@ document.body.onmousemove = (e)->
 	unprojector.unprojectVector(vector, camera)
 	ray = new T.Raycaster(camera.position, vector.sub(camera.position).normalize())
 	
-	#intersects = ray.intersectObjects(board.all_tile_meshes)
 	intersects = ray.intersectObjects(all_piece_meshes)
 	
 	if mouse.intersect
@@ -298,8 +289,6 @@ document.body.onmousedown = (e)->
 		
 		p = o.piece
 		if p.team is my_team
-			#if msg.is /yep/i then msg ""
-			#if msg.is /other team/i then msg "Yep, that's you."
 			if msg.is /other team/i then msg ""
 			if p.team is 2
 				unless space_occupied(p.xi, p.yi-1)
@@ -382,9 +371,7 @@ if io?
 	msg 'Connecting...'
 
 	socket.on 'position', ({pi, xi, yi, fx, fy})->
-		#console.log 'position', {pi, xi, yi}
 		pieces[pi].position(xi, yi, fx, fy)
-
 
 	socket.on 'other-turn', ->
 		it_is_your_turn = false
@@ -431,10 +418,10 @@ else
 	assign_team(choose(1, 2))
 	it_is_your_turn = true
 
+
 #=========#
 # ...GO!  #
 #=========#
-
 
 do animate = ->
 	requestAnimationFrame(animate)
