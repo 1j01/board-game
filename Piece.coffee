@@ -63,6 +63,10 @@ class @Piece
 				it_is_your_turn = false
 			
 			@position xi, yi, fx, fy
+			
+		else
+			console?.log? "Can't move to #{xi}, #{yi}"
+			console?.log? "From #{@xi}, #{@yi}"
 	
 	update: ->
 		# called every frame, animates the movement of the piece

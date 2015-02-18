@@ -74,8 +74,8 @@ class @Board
 	space_free: (xi, yi)->
 		
 		within_bounds = (
-			0 >= xi > board.tiles_x and
-			0 >= yi > board.tiles_y
+			0 <= xi < board.tiles_x and
+			0 <= yi < board.tiles_y
 		)
 		return no if not within_bounds
 		
