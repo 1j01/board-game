@@ -15,21 +15,23 @@ io = socket_io.listen(server, {'log level': 2})
 app.use express.static(__dirname)
 
 
-
-tiles_x = 10
-tiles_y = 14
+class Board
+	tiles_x: 10
+	tiles_y: 14
 
 
 class Piece
-	constructor: (@team)->
+	@pieces = []
+	constructor: (@team)-> Piece.pieces.push @
 	position: (@xi, @yi, @fx, @fy)-> @
+
+board = new Board
 
 team_1_pieces = []
 team_2_pieces = []
-for xi in [0...tiles_x]
+for xi in [0...board.tiles_x]
 	team_1_pieces.push new Piece(1).position(xi, 0, 0, 1)
-	team_2_pieces.push new Piece(2).position(xi, tiles_y-1, 0, -1)
-pieces = team_1_pieces.concat team_2_pieces
+	team_2_pieces.push new Piece(2).position(xi, board.tiles_y-1, 0, -1)
 
 players = []
 game = off # wait for it...
@@ -48,7 +50,7 @@ io.sockets.on 'connection', (socket)->
 	socket.broadcast.emit 'other-join', player.team
 
 	socket.on 'position', ({pi, xi, yi, fx, fy})->
-		pieces[pi].position(xi, yi, fx, fy)
+		Piece.pieces[pi].position(xi, yi, fx, fy)
 		socket.broadcast.emit 'position', {pi, xi, yi, fx, fy}
 
 		socket.emit 'other-turn'

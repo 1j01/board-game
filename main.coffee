@@ -1,50 +1,6 @@
 
-TAU = Math.PI + Math.PI # or C/r
-T = THREE
-P = Physijs
-V2 = T.Vector2
-V3 = T.Vector3
-
-choose = (args...)->
-	arr = if args.length > 1 then args else args[0]
-	arr[~~(Math.random()*arr.length)]
-
-###################################
-
-my_team = -1
-my_team_pieces = []
-it_is_your_turn = false
-you_got_kicked_bro = false
-op_disconnected = false
-
-###################################
-
-tiles_x = 10
-tiles_y = 14
-
-board_thickness = 4
-board_extension = 5
-tile_length = 10
-tile_spacing = 0
-tile_thickness = 0.9
-
-spaced_tile_length = tile_length + tile_spacing
-board_width = spaced_tile_length * tiles_x
-board_height = spaced_tile_length * tiles_y
-
-get_tile_x = (xi)-> (xi+.5) * spaced_tile_length - board_width/2
-get_tile_y = (yi)-> (yi+.5) * spaced_tile_length - board_height/2
-
-###################################
-
-# relative to this file
-P.scripts.worker = './lib/physijs_worker.js'
-# relative to the above worker file
-P.scripts.ammo = './ammo.js'
-
-
 # SCENE
-scene = new P.Scene(fixedTimeStep: 1/30)
+@scene = new P.Scene(fixedTimeStep: 1/30)
 scene.setGravity(new V3(0, -300, 0))
 
 # CAMERA
@@ -100,145 +56,11 @@ scene.add light
 
 ###################################
 
-class Board
-	
-	constructor: ->
-		base_material = P.createMaterial(
-			new T.MeshPhongMaterial(color: 0x77544A)
-			0.8 # high friction
-			0.3 # low restitution
-		)
-
-		@base_mesh = new P.BoxMesh(
-			new T.BoxGeometry(board_width+board_extension, board_thickness, board_height+board_extension)
-			base_material
-			0 # mass, 0 = static
-		)
-		@base_mesh.position.set(0, 0, 0)
-		@base_mesh.receiveShadow = true
-		
-		scene.add @base_mesh
-		
-		tile_material_1 = P.createMaterial(
-			new T.MeshPhongMaterial(color: 0xF4EDCE)
-			0.8 # high friction
-			0.3 # low restitution
-		)
-		tile_material_2 = P.createMaterial(
-			new T.MeshPhongMaterial(color: 0x432F29)
-			0.8 # high friction
-			0.3 # low restitution
-		)
-		
-		@all_tile_meshes = []
-		
-		for xi in [0...tiles_x]
-			for yi in [0...tiles_y]
-				
-				tile_mesh = new P.BoxMesh(
-					new T.BoxGeometry(tile_length, board_thickness, tile_length)
-					(if ((xi+yi)%2) is 0 then tile_material_1 else tile_material_2)
-					0 # mass, 0 = static
-				)
-				tile_mesh.position.set(
-					get_tile_x xi
-					tile_thickness
-					get_tile_y yi
-				)
-				tile_mesh.receiveShadow = true
-				
-				scene.add tile_mesh
-				
-				@all_tile_meshes.push tile_mesh
-				
-
-
-all_piece_meshes = []
-class Piece
-	constructor: (@team)->
-		material = P.createMaterial(
-			new T.MeshPhongMaterial(color: if @team is 1 then 0xFF5D5E else 0x432FFF)
-			0.8 # high friction
-			0.3 # low restitution
-		)
-		
-		u = 0.1
-		
-		points = [
-			new V2(-u, 0)
-			new V2(-u, u/999)
-			new V2(0, u)
-			new V2(u, u/999)
-			new V2(u, 0)
-		]
-		
-		shape = new T.Shape(points)
-		
-		extrudeSettings =
-			amount: 2
-			steps: 1
-			#material: 1
-			#extrudeMaterial: 0
-			bevelEnabled: yes
-			bevelThickness: 1
-			bevelSize: 4
-			bevelSegments: 4
-		
-		geometry = new T.ExtrudeGeometry(shape, extrudeSettings)
-		
-		@mesh = new T.Mesh(geometry, material)
-		
-		###@mesh = new P.ConvexMesh(geometry, material, 1)###
-
-		@mesh.receiveShadow = true
-		
-		@mesh.piece = @
-		
-		scene.add @mesh
-		all_piece_meshes.push @mesh
-	
-	position: (@xi, @yi, fx, fy)->
-		# sets the position of the piece
-		@xi_lag ?= @xi
-		@yi_lag ?= @yi
-		@fx = fx ? @fx
-		@fy = fy ? @fy
-		@fx_lag ?= @fx
-		@fy_lag ?= @fy
-		@
-	
-	move: (xi, yi, fx, fy)->
-		# moves the piece, sending the update to the server
-		if it_is_your_turn and not space_occupied(xi, yi)
-			
-			if socket?
-				socket.emit 'position', {pi: pieces.indexOf(@), xi, yi, fx, fy}
-				it_is_your_turn = false
-			
-			@position xi, yi, fx, fy
-		
-		@
-	
-	update: ->
-		# called every frame, animates the movement of the piece
-		slowness = 10
-		@xi_lag += (@xi - @xi_lag) / slowness
-		@yi_lag += (@yi - @yi_lag) / slowness
-		@fx_lag += (@fx - @fx_lag) / slowness
-		@fy_lag += (@fy - @fy_lag) / slowness
-		@mesh.position.set(
-			get_tile_x @xi_lag
-			5
-			get_tile_y @yi_lag
-		)
-		rotation = Math.atan2(@fy_lag, @fx_lag)
-		@mesh.rotation.set(
-			TAU/4
-			0
-			rotation - TAU/4
-		)
-		@
-
+my_team = -1
+my_team_pieces = []
+it_is_your_turn = false
+you_got_kicked_bro = false
+op_disconnected = false
 
 ###################################
 # INTERACTION
@@ -257,7 +79,7 @@ document.body.onmousemove = (e)->
 	unprojector.unprojectVector(vector, camera)
 	ray = new T.Raycaster(camera.position, vector.sub(camera.position).normalize())
 	
-	intersects = ray.intersectObjects(all_piece_meshes)
+	intersects = ray.intersectObjects(Piece.meshes)
 	
 	if mouse.intersect
 		mat = mouse.intersect.object.material
@@ -289,13 +111,9 @@ document.body.onmousedown = (e)->
 		
 		p = o.piece
 		if p.team is my_team
-			if msg.is /other team/i then msg ""
-			if p.team is 2
-				unless space_occupied(p.xi, p.yi-1)
-					p.move(p.xi, p.yi-1, choose(-1, 0, +1), -1)
-			else
-				unless space_occupied(p.xi, p.yi+1)
-					p.move(p.xi, p.yi+1, choose(-1, 0, +1), +1)
+			msg "" if msg.is /other team/i
+			dely = if p.team is 2 then -1 else +1
+			p.move(p.xi, p.yi+dely, choose(-1, 0, +1), dely)
 		else
 			msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
 
@@ -326,27 +144,14 @@ msg.is = (text)->
 #   ...   #
 #=========#
 
-board = new Board
+@board = new Board
 
 team_1_pieces = []
 team_2_pieces = []
-for xi in [0...tiles_x]
+for xi in [0...board.tiles_x]
 	team_1_pieces.push new Piece(1).position(xi, 0, 0, 1)
-	team_2_pieces.push new Piece(2).position(xi, tiles_y-1, 0, -1)
-pieces = team_1_pieces.concat team_2_pieces
+	team_2_pieces.push new Piece(2).position(xi, board.tiles_y-1, 0, -1)
 
-
-space_occupied = (xi, yi)->
-	if xi < 0 or yi < 0 or xi >= tiles_x or yi >= tiles_y
-		return yes # out of bounds
-	
-	well_is_it = no
-	
-	for p in pieces
-		if p.xi is xi and p.yi is yi
-			well_is_it = yes
-	
-	well_is_it
 
 assign_team = (team)->
 	my_team = team
@@ -358,20 +163,20 @@ assign_team = (team)->
 	camera.lookAt(scene.position)
 
 random_space = ->
-	xi: ~~(Math.random() * tiles_x)
-	yi: ~~(Math.random() * tiles_y)
+	xi: ~~(Math.random() * board.tiles_x)
+	yi: ~~(Math.random() * board.tiles_y)
 	
 random_free_space = ->
 	loop
 		{xi, yi} = random_space()
-		return {xi, yi} unless space_occupied(xi, yi)
+		return {xi, yi} if space_free(xi, yi)
 
 if io?
-	socket = io.connect location.origin
+	@socket = io.connect location.origin
 	msg 'Connecting...'
 
 	socket.on 'position', ({pi, xi, yi, fx, fy})->
-		pieces[pi].position(xi, yi, fx, fy)
+		Piece.pieces[pi].position(xi, yi, fx, fy)
 
 	socket.on 'other-turn', ->
 		it_is_your_turn = false
@@ -428,4 +233,4 @@ do animate = ->
 	#scene.simulate(undefined, 1)
 	renderer.render(scene, camera)
 	controls.update()
-	p.update() for p in pieces
+	p.update() for p in Piece.pieces
