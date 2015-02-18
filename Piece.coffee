@@ -5,7 +5,7 @@
 class @Piece
 	constructor: (@team)->
 		material = P.createMaterial(
-			new T.MeshPhongMaterial(@team) # (color: .color)
+			new T.MeshPhongMaterial(color: @team.color)
 			0.8 # high friction
 			0.3 # low restitution
 		)
