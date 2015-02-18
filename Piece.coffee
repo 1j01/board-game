@@ -11,7 +11,6 @@ class @Piece
 		)
 		
 		u = 0.1
-		
 		points = [
 			new V2(-u, 0)
 			new V2(-u, u/999)
@@ -20,9 +19,9 @@ class @Piece
 			new V2(u, 0)
 		]
 		
-		shape = new T.Shape(points)
-		
-		geometry = new T.ExtrudeGeometry(shape,
+		geometry = new T.ExtrudeGeometry(
+			new T.Shape(points)
+			
 			amount: 2
 			steps: 1
 			#material: 1
@@ -36,8 +35,8 @@ class @Piece
 		@mesh = new T.Mesh(geometry, material)
 		
 		###@mesh = new P.ConvexMesh(geometry, material, 1)###
-
-		@mesh.receiveShadow = true
+		
+		@mesh.receiveShadow = yes
 		
 		@mesh.piece = @
 		scene.add @mesh
@@ -46,14 +45,14 @@ class @Piece
 		@team.pieces.push @
 	
 	position: (@xi, @yi, fx, fy)->
-		# sets the position of the piece
-		@xi_lag ?= @xi
-		@yi_lag ?= @yi
+		
 		@fx = fx ? @fx
 		@fy = fy ? @fy
+		
+		@xi_lag ?= @xi
+		@yi_lag ?= @yi
 		@fx_lag ?= @fx
 		@fy_lag ?= @fy
-		@
 	
 	move: (xi, yi, fx, fy)->
 		# moves the piece, sending the update to the server
@@ -64,8 +63,6 @@ class @Piece
 				it_is_your_turn = false
 			
 			@position xi, yi, fx, fy
-		
-		@
 	
 	update: ->
 		# called every frame, animates the movement of the piece
@@ -85,5 +82,4 @@ class @Piece
 			0
 			rotation - TAU/4
 		)
-		@
 

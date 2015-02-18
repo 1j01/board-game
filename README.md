@@ -39,6 +39,12 @@ Some moves can remove a piece at "full health" immediately.
 
 * :traffic_light: Support multiple game sessions on the server
 
+* Use or lose the physijs
+
+* Clarify variable naming in regards to whether coordinates are in tile space or scene space
+  (Maybe use only THREE's Vectors for things in scene space)
+
+* Fix hovering over multiple pieces (?)
 
 1. :package: ship it :shipit:
 2. :question::question::question:

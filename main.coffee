@@ -66,7 +66,7 @@ op_disconnected = false
 ###################################
 
 unprojector = new T.Projector()
-mouse = {x: 0, y: 0}
+mouse = x: 0, y: 0
 
 document.body.onmousemove = (e)->
 	e.preventDefault()
@@ -99,6 +99,7 @@ document.body.onmousemove = (e)->
 
 
 document.body.onmousedown = (e)->
+	document.body.onmousemove(e)
 	if it_is_your_turn and mouse.intersect
 		e.preventDefault()
 		e.stopPropagation()
@@ -116,7 +117,6 @@ document.body.onmousedown = (e)->
 			msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
 
 document.body.ontouchstart = (e)->
-	document.body.onmousemove(e)
 	document.body.onmousedown(e)
 
 ###################################
@@ -148,8 +148,8 @@ msg.is = (text)->
 @team_red = new Team 2, -1
 
 for xi in [0...board.tiles_x]
-	new Piece(@team_blue).position(xi, 0, 0, @team_blue.facing)
-	new Piece(@team_red).position(xi, board.tiles_y-1, 0, @team_red.facing)
+	new Piece(team_blue).position(xi, team_blue.side_yi, 0, team_blue.facing)
+	new Piece(team_red).position(xi, team_red.side_yi, 0, team_red.facing)
 
 
 assign_team = (team)->

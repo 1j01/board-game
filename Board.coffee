@@ -53,8 +53,8 @@ class @Board
 				
 				tile_mesh = new P.BoxMesh(
 					new T.BoxGeometry(tile_length, thickness, tile_length)
-					(if ((xi+yi)%2) is 0 then tile_material_1 else tile_material_2)
-					0 # mass, 0 = static
+					(if (xi+yi)%2 is 0 then tile_material_1 else tile_material_2)
+					0 # mass, 0 means static
 				)
 				tile_mesh.position.set(
 					@get_tile_x xi
@@ -68,12 +68,16 @@ class @Board
 				@tile_meshes.push tile_mesh
 	
 	
-	get_tile_x: (xi)-> (xi+.5) * spaced_tile_length - @width/2
-	get_tile_y: (yi)-> (yi+.5) * spaced_tile_length - @height/2
+	get_tile_x: (xi)-> (xi + 1/2) * spaced_tile_length - @width/2
+	get_tile_y: (yi)-> (yi + 1/2) * spaced_tile_length - @height/2
 	
 	space_free: (xi, yi)->
-		return no if xi < 0 or yi < 0 or xi >= board.tiles_x or yi >= board.tiles_y
-		#return no unless 0 >= xi > board.tiles_x and 0 >= yi > board.tiles_y
+		
+		within_bounds = (
+			0 >= xi > board.tiles_x and
+			0 >= yi > board.tiles_y
+		)
+		return no if not within_bounds
 		
 		for p in pieces
 			return no if p.xi is xi and p.yi is yi
