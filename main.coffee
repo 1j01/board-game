@@ -56,8 +56,7 @@ scene.add light
 
 ###################################
 
-my_team = -1
-my_team_pieces = []
+my_team = null
 it_is_your_turn = false
 you_got_kicked_bro = false
 op_disconnected = false
@@ -79,7 +78,7 @@ document.body.onmousemove = (e)->
 	unprojector.unprojectVector(vector, camera)
 	ray = new T.Raycaster(camera.position, vector.sub(camera.position).normalize())
 	
-	intersects = ray.intersectObjects(Piece.meshes)
+	intersects = ray.intersectObjects(piece_meshes)
 	
 	if mouse.intersect
 		mat = mouse.intersect.object.material
@@ -112,8 +111,7 @@ document.body.onmousedown = (e)->
 		p = o.piece
 		if p.team is my_team
 			msg "" if msg.is /other team/i
-			dely = if p.team is 2 then -1 else +1
-			p.move(p.xi, p.yi+dely, choose(-1, 0, +1), dely)
+			p.move(p.xi, p.yi+p.team.facing, choose(-1, 0, +1), p.team.facing)
 		else
 			msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
 
@@ -146,20 +144,17 @@ msg.is = (text)->
 
 @board = new Board
 
-team_1_pieces = []
-team_2_pieces = []
+@team_blue = new Team 1, +1
+@team_red = new Team 2, -1
+
 for xi in [0...board.tiles_x]
-	team_1_pieces.push new Piece(1).position(xi, 0, 0, 1)
-	team_2_pieces.push new Piece(2).position(xi, board.tiles_y-1, 0, -1)
+	new Piece(@team_blue).position(xi, 0, 0, @team_blue.facing)
+	new Piece(@team_red).position(xi, board.tiles_y-1, 0, @team_red.facing)
 
 
 assign_team = (team)->
-	my_team = team
-	my_team_pieces = switch my_team
-		when 1 then team_1_pieces
-		when 2 then team_2_pieces
-	
-	camera.position.set(0, 100, 200 * [0,-1,+1][my_team])
+	my_team = Team.get team
+	camera.position.set(0, 100, -200 * my_team.facing)
 	camera.lookAt(scene.position)
 
 random_space = ->
@@ -176,7 +171,7 @@ if io?
 	msg 'Connecting...'
 
 	socket.on 'position', ({pi, xi, yi, fx, fy})->
-		Piece.pieces[pi].position(xi, yi, fx, fy)
+		pieces[pi].position(xi, yi, fx, fy)
 
 	socket.on 'other-turn', ->
 		it_is_your_turn = false
@@ -193,7 +188,7 @@ if io?
 		# http://localhost:8080/#I_AM_AN_INSANE_ROUGE_AI
 		if location.hash.match /ai/i
 			setTimeout ->
-				p = choose(my_team_pieces)
+				p = choose(my_team.pieces)
 				{xi, yi} = random_free_space()
 				facing_x = choose(-1, +1)
 				facing_y = choose(-1, +1)
@@ -233,4 +228,4 @@ do animate = ->
 	#scene.simulate(undefined, 1)
 	renderer.render(scene, camera)
 	controls.update()
-	p.update() for p in Piece.pieces
+	p.update() for p in pieces

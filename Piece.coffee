@@ -1,10 +1,11 @@
 
+@piece_meshes = []
+@pieces = []
+
 class @Piece
-	@meshes = []
-	@pieces = []
 	constructor: (@team)->
 		material = P.createMaterial(
-			new T.MeshPhongMaterial(color: if @team is 1 then 0xFF5D5E else 0x432FFF)
+			new T.MeshPhongMaterial(@team) # (color: .color)
 			0.8 # high friction
 			0.3 # low restitution
 		)
@@ -40,8 +41,9 @@ class @Piece
 		
 		@mesh.piece = @
 		scene.add @mesh
-		Piece.meshes.push @mesh
-		Piece.pieces.push @
+		piece_meshes.push @mesh
+		pieces.push @
+		@team.pieces.push @
 	
 	position: (@xi, @yi, fx, fy)->
 		# sets the position of the piece
@@ -58,7 +60,7 @@ class @Piece
 		if board.space_free(xi, yi)
 			
 			if socket?
-				socket.emit 'position', {pi: Piece.pieces.indexOf(@), xi, yi, fx, fy}
+				socket.emit 'position', {pi: pieces.indexOf(@), xi, yi, fx, fy}
 				it_is_your_turn = false
 			
 			@position xi, yi, fx, fy

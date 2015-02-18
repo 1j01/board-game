@@ -75,10 +75,8 @@ class @Board
 		return no if xi < 0 or yi < 0 or xi >= board.tiles_x or yi >= board.tiles_y
 		#return no unless 0 >= xi > board.tiles_x and 0 >= yi > board.tiles_y
 		
-		for p in Piece.pieces
+		for p in pieces
 			return no if p.xi is xi and p.yi is yi
 		
 		return yes
-	
-	space_occupied: (xi, yi)-> not @space_free()
 	

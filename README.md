@@ -37,8 +37,10 @@ Some moves can remove a piece at "full health" immediately.
 
 * :speech_balloon: Implement chat
 
+* :traffic_light: Support multiple game sessions on the server
 
-1. :question::question::question:
-2. :package: ship it :shipit:
+
+1. :package: ship it :shipit:
+2. :question::question::question:
 3. :moneybag: PROFIT :dollar:
 
