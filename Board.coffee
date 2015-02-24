@@ -79,8 +79,11 @@ class @Board
 		)
 		return no if not within_bounds
 		
-		for p in pieces
-			return no if p.xi is xi and p.yi is yi
+		for piece in pieces
+			return no if (
+				piece.xi is xi and
+				piece.yi is yi
+			)
 		
-		return yes
+		yes
 	

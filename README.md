@@ -44,6 +44,8 @@ Some moves can remove a piece at "full health" immediately.
 * Clarify variable naming in regards to whether coordinates are in tile space or scene space
   (Maybe use only THREE's Vectors for things in scene space)
 
+* Camera touch controls
+
 1. :package: ship it :shipit:
 2. :question::question::question:
 3. :moneybag: PROFIT :dollar:
