@@ -37,7 +37,7 @@ window.onresize = ->
 
 
 # CONTROLS
-controls = new T.OrbitControls(camera, renderer.domElement)
+controls = new T.TrackballControls(camera, renderer.domElement)
 
 # LIGHTING
 light = new T.PointLight(0xffffff, 1, 10000)
