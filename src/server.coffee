@@ -13,7 +13,7 @@ console.log "Server listening on http://#{IP}:#{PORT}/"
 
 io = socket_io.listen(server, {'log level': 2})
 
-app.use express.static(__dirname)
+app.use express.static("#{__dirname}/..")
 
 
 
