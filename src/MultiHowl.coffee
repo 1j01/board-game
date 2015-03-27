@@ -16,9 +16,5 @@ class @MultiHowl
 					urls: [url]
 		@antiRepeats = []
 	
-	get: ->
-		@howls[~~(Math.random() * @howls.length)]
-	
 	play: ->
-		h = @get()
-		h.play()
+		choose(@howls).play()
