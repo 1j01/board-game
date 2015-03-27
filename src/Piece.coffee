@@ -2,6 +2,11 @@
 @piece_meshes = []
 @pieces = []
 
+pickupSound = new MultiHowl "pickup", [0..3]
+placeSound = new MultiHowl "place", [0..7]
+cancelSound = new MultiHowl "cancel", [0]
+moveSound = new MultiHowl "move", [0]
+
 class @Piece
 	constructor: (@team)->
 		@lifted = no
@@ -59,6 +64,7 @@ class @Piece
 	
 	move: (xi, yi, fx, fy)->
 		# moves the piece, sending the update to the server
+		console.log "Move to #{xi}, #{yi}"
 		if board.space_free(xi, yi)
 			
 			if socket?
@@ -67,16 +73,23 @@ class @Piece
 			
 			@position xi, yi, fx, fy
 			
+			moveSound.play()
+			yes
 		else
 			console?.log? "Can't move to #{xi}, #{yi}"
-			console?.log? "From #{@xi}, #{@yi}"
+			console?.log? "(From #{@xi}, #{@yi})"
+			no
 	
 	lift: ->
 		@lifted = yes
+		pickupSound.play()
 	
 	place: (xi, yi, fx, fy)->
 		@lifted = no
-		@move xi, yi, fx, fy if xi?
+		if xi? and @move xi, yi, fx, fy
+			placeSound.play()
+		else
+			cancelSound.play()
 	
 	update: ->
 		# called every frame, animates the movement of the piece

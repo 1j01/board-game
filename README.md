@@ -27,8 +27,6 @@ Some moves can remove a piece at "full health" immediately.
 
 * :game_die: Add dice!
 
-* :sound: Add sound
-
 * :musical_score: Add music :notes:
 
 * :video_game: Make this thing into a game already! :soccer:
