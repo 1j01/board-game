@@ -4,6 +4,8 @@
 
 class @Piece
 	constructor: (@team)->
+		@lifted = no
+		
 		material = P.createMaterial(
 			new T.MeshPhongMaterial(color: @team.color)
 			0.8 # high friction
@@ -53,6 +55,7 @@ class @Piece
 		@yi_lag ?= @yi
 		@fx_lag ?= @fx
 		@fy_lag ?= @fy
+		@lifted_lag ?= 0
 	
 	move: (xi, yi, fx, fy)->
 		# moves the piece, sending the update to the server
@@ -68,6 +71,13 @@ class @Piece
 			console?.log? "Can't move to #{xi}, #{yi}"
 			console?.log? "From #{@xi}, #{@yi}"
 	
+	lift: ->
+		@lifted = yes
+	
+	place: (xi, yi, fx, fy)->
+		@lifted = no
+		@move xi, yi, fx, fy if xi?
+	
 	update: ->
 		# called every frame, animates the movement of the piece
 		slowness = 10
@@ -75,14 +85,15 @@ class @Piece
 		@yi_lag += (@yi - @yi_lag) / slowness
 		@fx_lag += (@fx - @fx_lag) / slowness
 		@fy_lag += (@fy - @fy_lag) / slowness
+		@lifted_lag += (@lifted - @lifted_lag) / slowness
 		@mesh.position.set(
 			board.get_tile_x @xi_lag
-			5
+			5 + @lifted_lag * 10
 			board.get_tile_y @yi_lag
 		)
 		rotation = Math.atan2(@fy_lag, @fx_lag)
 		@mesh.rotation.set(
-			TAU/4
+			TAU/4 - @lifted_lag/TAU
 			0
 			rotation - TAU/4
 		)

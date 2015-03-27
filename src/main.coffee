@@ -67,6 +67,7 @@ op_disconnected = false
 
 unprojector = new T.Projector()
 mouse = x: 0, y: 0
+holding = null
 
 document.body.onmousemove = (e)->
 	e.preventDefault()
@@ -109,7 +110,14 @@ document.body.onmousedown = (e)->
 		p = o.piece
 		if p.team is my_team
 			msg "" if msg.is /other team/i
-			p.move(p.xi, p.yi+p.team.facing, choose(-1, 0, +1), p.team.facing)
+			# p.move(p.xi, p.yi+p.team.facing, choose(-1, 0, +1), p.team.facing)
+			if p.lifted
+				p.place()
+				holding = null
+			else
+				holding?.place()
+				p.lift()
+				holding = p
 		else
 			msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
 
