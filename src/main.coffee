@@ -183,7 +183,9 @@ msg.is = (text)->
 
 for xi in [0...board.tiles_x]
 	new Piece(team_blue).position(xi, team_blue.side_yi, 0, team_blue.facing)
+	new Piece(team_blue).position(xi, team_blue.side_yi + team_blue.facing, 0, team_blue.facing)
 	new Piece(team_red).position(xi, team_red.side_yi, 0, team_red.facing)
+	new Piece(team_red).position(xi, team_red.side_yi + team_red.facing, 0, team_red.facing)
 
 
 assign_team = (team)->
