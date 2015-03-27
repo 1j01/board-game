@@ -69,16 +69,28 @@ unprojector = new T.Projector()
 mouse = x: 0, y: 0
 holding = null
 
-document.body.onmousemove = (e)->
-	e.preventDefault()
-	
+unhover = ->
 	if mouse.intersect
 		mat = mouse.intersect.object.material
-		mat.emissive.setHex(mat.original.emissive)
-		mat.color.setHex(mat.original.color)
+		if mat.original
+			mat.emissive.setHex(mat.original.emissive)
+			mat.color.setHex(mat.original.color)
 		mat.needsUpdate = true
 		
 		document.body.style.cursor = "default"
+
+hover = (object, fn)->
+	mat = object.material
+	mat.original =
+		emissive: mat.emissive.getHex()
+		color: mat.color.getHex()
+	fn mat
+	mat.needsUpdate = true
+
+document.body.onmousemove = (e)->
+	e.preventDefault()
+	
+	unhover()
 	
 	mouse.x = (e.offsetX / WIDTH) * 2 - 1
 	mouse.y = (e.offsetY / HEIGHT) * -2 + 1
@@ -92,32 +104,22 @@ document.body.onmousemove = (e)->
 	
 	intersects = ray.intersectObjects(piece_meshes)
 	
-	intersect = intersects[0]
+	mouse.intersect = intersect = intersects[0]
 	
 	if it_is_your_turn
 		if intersect
-			mouse.intersect = intersect
-			mat = intersect.object.material
-			mat.original =
-				emissive: mat.emissive.getHex()
-				color: mat.color.getHex()
-			mat.emissive.setHex(0x0f0f0f)
-			mat.needsUpdate = true
+			hover intersect.object, (mat)->
+				mat.emissive.setHex(0x0f0f0f)
 			
 			document.body.style.cursor = "pointer"
 		else
 			if holding?
 				intersects = ray.intersectObjects(board.tile_meshes)
-				intersect = intersects[0]
+				mouse.intersect = intersect = intersects[0]
 				
 				if intersect
-					mouse.intersect = intersect
-					mat = mouse.intersect.object.material
-					mat.original =
-						emissive: mat.emissive.getHex()
-						color: mat.color.getHex()
-					mat.color.setHex(0x03af0f)
-					mat.needsUpdate = true
+					hover intersect.object, (mat)->
+						mat.color.setHex(0x03af0f)
 
 
 document.body.onmousedown = (e)->
@@ -145,6 +147,8 @@ document.body.onmousedown = (e)->
 			{xi, yi} = o
 			holding?.place xi, yi
 			holding = null
+			unhover()
+			mouse.intersect = null
 
 document.body.ontouchstart = (e)->
 	document.body.onmousedown(e)
