@@ -18,12 +18,13 @@ class @Piece
 		)
 		
 		u = 0.1
+		o = 1
 		points = [
-			new V2(-u, 0)
-			new V2(-u, u/999)
-			new V2(0, u)
-			new V2(u, u/999)
-			new V2(u, 0)
+			new V2(-u, -o)
+			new V2(-u, u/999-o)
+			new V2(0, u-o)
+			new V2(u, u/999-o)
+			new V2(u, -o)
 		]
 		
 		geometry = new T.ExtrudeGeometry(
@@ -42,6 +43,10 @@ class @Piece
 		@mesh = new T.Mesh(geometry, material)
 		
 		###@mesh = new P.ConvexMesh(geometry, material, 1)###
+		
+		@mesh.scale.x = 0.9
+		@mesh.scale.y = 0.8
+		@mesh.scale.z = 0.5
 		
 		@mesh.receiveShadow = yes
 		
@@ -101,7 +106,7 @@ class @Piece
 		@lifted_lag += (@lifted - @lifted_lag) / slowness
 		@mesh.position.set(
 			board.get_tile_x @xi_lag
-			5 + @lifted_lag * 10
+			4 + @lifted_lag * 10
 			board.get_tile_y @yi_lag
 		)
 		rotation = Math.atan2(@fy_lag, @fx_lag)
