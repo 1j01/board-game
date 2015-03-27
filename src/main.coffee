@@ -72,31 +72,52 @@ holding = null
 document.body.onmousemove = (e)->
 	e.preventDefault()
 	
+	if mouse.intersect
+		mat = mouse.intersect.object.material
+		mat.emissive.setHex(mat.original.emissive)
+		mat.color.setHex(mat.original.color)
+		mat.needsUpdate = true
+		
+		document.body.style.cursor = "default"
+	
 	mouse.x = (e.offsetX / WIDTH) * 2 - 1
 	mouse.y = (e.offsetY / HEIGHT) * -2 + 1
 	
 	vector = new V3(mouse.x, mouse.y, 1)
 	unprojector.unprojectVector(vector, camera)
-	ray = new T.Raycaster(camera.position, vector.sub(camera.position).normalize())
+	ray = new T.Raycaster(
+		camera.position
+		vector.sub(camera.position).normalize()
+	)
 	
 	intersects = ray.intersectObjects(piece_meshes)
 	
-	if mouse.intersect
-		mat = mouse.intersect.object.material
-		mat.emissive.setHex(mouse.oeh)
-		mat.needsUpdate = true
-		
-		document.body.style.cursor = "default"
+	intersect = intersects[0]
 	
-	mouse.intersect = intersect = intersects[0]
-	
-	if mouse.intersect and it_is_your_turn
-		mat = mouse.intersect.object.material
-		mouse.oeh = mat.emissive.getHex()
-		mat.emissive.setHex(0x0f0f0f)
-		mat.needsUpdate = true
-		
-		document.body.style.cursor = "pointer"
+	if it_is_your_turn
+		if intersect
+			mouse.intersect = intersect
+			mat = intersect.object.material
+			mat.original =
+				emissive: mat.emissive.getHex()
+				color: mat.color.getHex()
+			mat.emissive.setHex(0x0f0f0f)
+			mat.needsUpdate = true
+			
+			document.body.style.cursor = "pointer"
+		else
+			if holding?
+				intersects = ray.intersectObjects(board.tile_meshes)
+				intersect = intersects[0]
+				
+				if intersect
+					mouse.intersect = intersect
+					mat = mouse.intersect.object.material
+					mat.original =
+						emissive: mat.emissive.getHex()
+						color: mat.color.getHex()
+					mat.color.setHex(0x03af0f)
+					mat.needsUpdate = true
 
 
 document.body.onmousedown = (e)->
@@ -107,19 +128,23 @@ document.body.onmousedown = (e)->
 		
 		o = mouse.intersect.object
 		
-		p = o.piece
-		if p.team is my_team
-			msg "" if msg.is /other team/i
-			# p.move(p.xi, p.yi+p.team.facing, choose(-1, 0, +1), p.team.facing)
-			if p.lifted
-				p.place()
-				holding = null
+		if p = o.piece
+			if p.team is my_team
+				msg "" if msg.is /other team/i
+				# p.move(p.xi, p.yi+p.team.facing, choose(-1, 0, +1), p.team.facing)
+				if p.lifted
+					p.place()
+					holding = null
+				else
+					holding?.place()
+					p.lift()
+					holding = p
 			else
-				holding?.place()
-				p.lift()
-				holding = p
+				msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
 		else
-			msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
+			{xi, yi} = o
+			holding?.place xi, yi
+			holding = null
 
 document.body.ontouchstart = (e)->
 	document.body.onmousedown(e)

@@ -35,17 +35,6 @@ class @Board
 		
 		scene.add @base_mesh
 		
-		tile_material_1 = P.createMaterial(
-			new T.MeshPhongMaterial(color: 0xF4EDCE)
-			0.8 # high friction
-			0.3 # low restitution
-		)
-		tile_material_2 = P.createMaterial(
-			new T.MeshPhongMaterial(color: 0x432F29)
-			0.8 # high friction
-			0.3 # low restitution
-		)
-		
 		@tile_meshes = []
 		
 		for xi in [0...@tiles_x]
@@ -53,8 +42,14 @@ class @Board
 				
 				tile_mesh = new P.BoxMesh(
 					new T.BoxGeometry(tile_length, thickness, tile_length)
-					(if (xi+yi)%2 is 0 then tile_material_1 else tile_material_2)
-					0 # mass, 0 means static
+					P.createMaterial(
+						new T.MeshPhongMaterial(
+							color: if (xi+yi)%2 is 0 then 0x432F29 else 0xF4EDCE
+						)
+						0.8 # high friction
+						0.3 # low restitution
+					)
+					0 # mass; 0 = static
 				)
 				tile_mesh.position.set(
 					@get_tile_x xi
@@ -65,6 +60,8 @@ class @Board
 				
 				scene.add tile_mesh
 				
+				tile_mesh.xi = xi
+				tile_mesh.yi = yi
 				@tile_meshes.push tile_mesh
 	
 	
