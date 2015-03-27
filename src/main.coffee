@@ -105,9 +105,6 @@ document.body.onmousedown = (e)->
 		e.stopPropagation()
 		
 		o = mouse.intersect.object
-		#force = mouse.intersect.point.sub(o.position)
-		#force.multiplyScalar(-30)
-		#o.setLinearVelocity(force)
 		
 		p = o.piece
 		if p.team is my_team
@@ -169,16 +166,16 @@ random_free_space = ->
 if io?
 	@socket = io.connect location.origin
 	msg 'Connecting...'
-
+	
 	socket.on 'position', ({pi, xi, yi, fx, fy})->
 		pieces[pi].position(xi, yi, fx, fy)
-
+	
 	socket.on 'other-turn', ->
 		it_is_your_turn = false
 		
 		unless op_disconnected
 			msg 'Other player\'s turn...'
-
+	
 	socket.on 'your-turn', ->
 		unless op_disconnected
 			msg 'Your turn...'
@@ -195,26 +192,25 @@ if io?
 				
 				p.move(xi, yi, facing_x, facing_y)
 			, 500
-
+	
 	socket.on 'you-join', (team)->
 		assign_team(team)
 		msg 'Waiting for other player...'
-
+	
 	socket.on 'other-disconnected', ->
 		msg 'Other player disconnected!'
 		op_disconnected = true
-
+	
 	socket.on 'room-already-full', ->
 		msg 'There are already two players.', 'Or there were. The server currently only handles one game and two connections, ever.'
 		you_got_kicked_bro = true
-
+	
 	socket.on 'disconnect', ->
 		unless you_got_kicked_bro
 			msg 'You got disconnected!', 'This could be a problem with the server or your internet connection.'
- 
+
 else
 	msg "There's no game server here", "(but you can see the 3d stuff hopefully)"
-	# so you can still interact with some pieces...
 	assign_team(choose(1, 2))
 	it_is_your_turn = true
 
@@ -225,7 +221,6 @@ else
 
 do animate = ->
 	requestAnimationFrame(animate)
-	#scene.simulate(undefined, 1)
 	renderer.render(scene, camera)
 	controls.update()
 	p.update() for p in pieces
