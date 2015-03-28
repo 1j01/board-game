@@ -68,6 +68,7 @@ op_disconnected = false
 unprojector = new T.Projector()
 mouse = x: 0, y: 0
 holding = null
+phase = "action"
 
 unhover = ->
 	if mouse.intersect
@@ -101,54 +102,83 @@ document.body.onmousemove = (e)->
 		camera.position
 		vector.sub(camera.position).normalize()
 	)
-	
 	intersects = ray.intersectObjects(piece_meshes)
 	
 	mouse.intersect = intersect = intersects[0]
 	
 	if it_is_your_turn
 		if intersect
-			hover intersect.object, (mat)->
-				mat.emissive.setHex(0x0f0f0f)
-			
-			document.body.style.cursor = "pointer"
-		else
-			if holding?
-				intersects = ray.intersectObjects(board.tile_meshes)
-				mouse.intersect = intersect = intersects[0]
+			if phase is "action" or not holding
+				hover intersect.object, (mat)->
+					mat.emissive.setHex(0x0f0f0f)
 				
+				document.body.style.cursor = "pointer"
+			else
+				mouse.intersect = null
+		else
+			if holding
+				if phase is "action"
+						intersects = ray.intersectObjects(board.tile_meshes)
+						mouse.intersect = intersect = intersects[0]
+						
+						if intersect
+							hover intersect.object, (mat)->
+								mat.color.setHex(0x03af0f)
+		
+		if phase is "rotation"
+			if holding
+				# @TODO: cast ray to infinite plane
+				intersects = ray.intersectObjects(board.tile_meshes)
+				intersect = intersects[0]
 				if intersect
-					hover intersect.object, (mat)->
-						mat.color.setHex(0x03af0f)
+					{xi, yi} = intersect.object
+					fx = xi - holding.xi
+					fy = yi - holding.yi
+					if fx isnt 0 or fy isnt 0
+						dir = Math.atan2(fy, fx)
+						d = Math.round(dir / TAU * 4)
+						dir = d * TAU / 4
+						fx = Math.cos(dir)
+						fy = Math.sin(dir)
+						holding.position(
+							holding.xi
+							holding.yi
+							fx
+							fy
+						)
 
 
 document.body.onmousedown = (e)->
 	document.body.onmousemove(e)
-	if it_is_your_turn and mouse.intersect
-		e.preventDefault()
-		e.stopPropagation()
-		
-		o = mouse.intersect.object
-		
-		if p = o.piece
-			if p.team is my_team
-				msg "" if msg.is /other team/i
-				# p.move(p.xi, p.yi+p.team.facing, choose(-1, 0, +1), p.team.facing)
-				if p.lifted
-					p.place()
-					holding = null
-				else
-					holding?.place()
-					p.lift()
-					holding = p
-			else
-				msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
-		else
-			{xi, yi} = o
-			holding?.place xi, yi
+	if it_is_your_turn
+		if phase is "rotation" and holding
+			holding.place()
 			holding = null
-			unhover()
-			mouse.intersect = null
+		else if mouse.intersect
+			e.preventDefault()
+			e.stopPropagation()
+			
+			o = mouse.intersect.object
+			
+			if p = o.piece
+				if p.team is my_team
+					msg "" if msg.is /other team/i
+					# p.move(p.xi, p.yi+p.team.facing, choose(-1, 0, +1), p.team.facing)
+					if p.lifted
+						p.place()
+						holding = null
+					else
+						holding?.place()
+						p.lift(if phase is "rotation" then 0.2 else 1)
+						holding = p
+				else
+					msg "You're the other team.", if io? then "" else "(Yes, I know it's silly since there isn't another player.)"
+			else
+				{xi, yi} = o
+				holding?.place xi, yi
+				holding = null
+				unhover()
+				mouse.intersect = null
 
 document.body.ontouchstart = (e)->
 	document.body.onmousedown(e)

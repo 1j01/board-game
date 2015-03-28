@@ -85,8 +85,7 @@ class @Piece
 			console?.log? "(From #{@xi}, #{@yi})"
 			no
 	
-	lift: ->
-		@lifted = yes
+	lift: (@lifted = yes)->
 		pickupSound.play()
 	
 	place: (xi, yi, fx, fy)->
