@@ -4,7 +4,7 @@ http = require 'http'
 socket_io = require 'socket.io'
 {env} = process
 
-PORT = env.OPENSHIFT_NODEJS_PORT ? env.PORT ? 8080
+PORT = env.OPENSHIFT_NODEJS_PORT ? env.PORT ? 8181
 IP = env.OPENSHIFT_NODEJS_IP ? env.IP ? '127.0.0.1'
 
 app = express()
@@ -31,12 +31,19 @@ io.sockets.on 'connection', (socket)->
 	
 	socket.emit 'you-join', player.team
 	socket.broadcast.emit 'other-join', player.team
-
+	
+	socket.on 'rotation', ({pi, fx, fy})->
+		socket.broadcast.emit 'position', {pi, fx, fy}
+	
 	socket.on 'position', ({pi, xi, yi, fx, fy})->
 		socket.broadcast.emit 'position', {pi, xi, yi, fx, fy}
-
+		
 		socket.emit 'other-turn'
 		socket.broadcast.emit 'your-turn'
+	
+	socket.on 'roll', ({di})->
+		n = ~~(Math.random() * 6) + 1
+		socket.emit 'roll', {di, n}
 	
 	socket.on 'disconnect', ->
 		socket.broadcast.emit 'other-disconnected'

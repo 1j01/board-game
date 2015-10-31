@@ -68,30 +68,30 @@ op_disconnected = false
 unprojector = new T.Projector()
 mouse = x: 0, y: 0
 holding = null
-phase = "action"
+phase = "rotation"
 
 unhover = ->
-	if mouse.intersect
-		mat = mouse.intersect.object.material
+	console.log "unhover", mouse.pointed
+	if mouse.pointed
+		mat = mouse.pointed.material
 		if mat.original
 			mat.emissive.setHex(mat.original.emissive)
 			mat.color.setHex(mat.original.color)
 		mat.needsUpdate = true
-		
-		document.body.style.cursor = "default"
+		# mouse.pointed = null
+	document.body.style.cursor = "default"
 
 hover = (object, fn)->
 	mat = object.material
 	mat.original =
 		emissive: mat.emissive.getHex()
 		color: mat.color.getHex()
+	document.body.style.cursor = "pointer"
 	fn mat
 	mat.needsUpdate = true
 
 document.body.onmousemove = (e)->
 	e.preventDefault()
-	
-	unhover()
 	
 	mouse.x = (e.offsetX / WIDTH) * 2 - 1
 	mouse.y = (e.offsetY / HEIGHT) * -2 + 1
@@ -102,50 +102,53 @@ document.body.onmousemove = (e)->
 		camera.position
 		vector.sub(camera.position).normalize()
 	)
-	intersects = ray.intersectObjects(piece_meshes)
+	pointed = (objects)->
+		unhover()
+		intersects = ray.intersectObjects(objects)
+		mouse.pointed = intersects[0]?.object
+		console.log "pointed", mouse.pointed
 	
-	mouse.intersect = intersect = intersects[0]
+	piece = (pointed piece_meshes)?.piece
 	
 	if it_is_your_turn
-		if intersect
-			if phase is "action" or not holding
-				hover intersect.object, (mat)->
+		if piece
+			if phase is "action" or (phase is "rotation" and not holding)
+				hover piece.mesh, (mat)->
 					mat.emissive.setHex(0x0f0f0f)
-				
-				document.body.style.cursor = "pointer"
-			else
-				mouse.intersect = null
+					if piece.team isnt my_team
+						document.body.style.cursor = "not-allowed"
+			# else
+			# 	unhover()
 		else
 			if holding
 				if phase is "action"
-						intersects = ray.intersectObjects(board.tile_meshes)
-						mouse.intersect = intersect = intersects[0]
-						
-						if intersect
-							hover intersect.object, (mat)->
-								mat.color.setHex(0x03af0f)
+					tile_mesh = pointed board.tile_meshes
+					if tile_mesh
+						hover tile_mesh, (mat)->
+							mat.color.setHex(0x03af0f)
 		
 		if phase is "rotation"
 			if holding
 				# @TODO: cast ray to infinite plane
-				intersects = ray.intersectObjects(board.tile_meshes)
-				intersect = intersects[0]
-				if intersect
-					{xi, yi} = intersect.object
-					fx = xi - holding.xi
-					fy = yi - holding.yi
-					if fx isnt 0 or fy isnt 0
+				tile_mesh = pointed board.tile_meshes
+				if tile_mesh
+					{xi, yi} = tile_mesh
+					dx = xi - holding.xi
+					dy = yi - holding.yi
+					if dx isnt 0 or dy isnt 0 and dx isnt holding.fx and dx isnt holding.fx
 						dir = Math.atan2(fy, fx)
-						d = Math.round(dir / TAU * 4)
-						dir = d * TAU / 4
-						fx = Math.cos(dir)
-						fy = Math.sin(dir)
-						holding.position(
-							holding.xi
-							holding.yi
-							fx
-							fy
-						)
+						d4 = Math.round(dir / TAU * 4)
+						dir4 = d4 / 4 * TAU
+						fx = Math.cos(dir4)
+						fy = Math.sin(dir4)
+						holding.rotate fx, fy
+			else
+				_mp = mouse.pointed
+				die = (pointed dice_meshes)?.die
+				if die
+					die.lift()
+				else
+					mouse.pointed = _mp
 
 
 document.body.onmousedown = (e)->
@@ -154,11 +157,9 @@ document.body.onmousedown = (e)->
 		if phase is "rotation" and holding
 			holding.place()
 			holding = null
-		else if mouse.intersect
+		else if o = mouse.pointed
 			e.preventDefault()
 			e.stopPropagation()
-			
-			o = mouse.intersect.object
 			
 			if p = o.piece
 				if p.team is my_team
@@ -178,7 +179,7 @@ document.body.onmousedown = (e)->
 				holding?.place xi, yi
 				holding = null
 				unhover()
-				mouse.intersect = null
+				mouse.pointed = null
 
 document.body.ontouchstart = (e)->
 	document.body.onmousedown(e)
@@ -217,6 +218,8 @@ for xi in [0...board.tiles_x]
 	new Piece(team_red).position(xi, team_red.side_yi, 0, team_red.facing)
 	new Piece(team_red).position(xi, team_red.side_yi + team_red.facing, 0, team_red.facing)
 
+new Die 1
+new Die 2
 
 assign_team = (team)->
 	my_team = Team.get team
@@ -247,7 +250,7 @@ if io?
 	
 	socket.on 'your-turn', ->
 		unless op_disconnected
-			msg 'Your turn...'
+			msg 'Your turn...', 'Orient your pieces'
 		
 		it_is_your_turn = true
 		

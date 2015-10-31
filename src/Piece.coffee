@@ -74,7 +74,7 @@ class @Piece
 			
 			if socket?
 				socket.emit 'position', {pi: pieces.indexOf(@), xi, yi, fx, fy}
-				it_is_your_turn = false
+				window.it_is_your_turn = false
 			
 			@position xi, yi, fx, fy
 			
@@ -84,6 +84,12 @@ class @Piece
 			console?.log? "Can't move to #{xi}, #{yi}"
 			console?.log? "(From #{@xi}, #{@yi})"
 			no
+	
+	rotate: (@fx, @fy)->
+		# moveSound.play()
+		if socket?
+			socket.emit 'rotation', {pi: pieces.indexOf(@), fx, fy}
+			window.it_is_your_turn = false
 	
 	lift: (@lifted = yes)->
 		pickupSound.play()
@@ -110,7 +116,7 @@ class @Piece
 		)
 		rotation = Math.atan2(@fy_lag, @fx_lag)
 		@mesh.rotation.set(
-			TAU/4 - @lifted_lag/TAU
+			TAU/4 # - @lifted_lag/TAU # is not relative to the piece's orientation
 			0
 			rotation - TAU/4
 		)

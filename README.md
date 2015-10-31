@@ -1,14 +1,17 @@
 
 ### Intended Gameplay
 
-On a turn, a player may orient any of their pieces to any of the four directions.
-Then the player rolls the two (2) dice.
-Finally, the player chooses moves for each of the dice,
-conventionally discarding the dice to the other player as they are used.
+On each turn, a player may orient any of their pieces to any of the four directions.
+Then the player rolls the six (6) dice.
+There are two types of dice,
+which share the same actions for 2 to 5,
+but differ in the meaning of 1 and 6.
+
+Then the player chooses moves for each of the dice,
+discarding the dice to the other player as they are used.
 
 Different numbers mean different ways you can move.
 
-The semantics of the two (2) dice differ... for the 6 and 1?
 
 I'll make a table here later of all the moves.
 
