@@ -131,6 +131,7 @@ document.body.onmousemove = (e)->
 			if holding
 				# @TODO: cast ray to infinite plane
 				tile_mesh = pointed board.tile_meshes
+				# console.log tile_mesh
 				if tile_mesh
 					{xi, yi} = tile_mesh
 					dx = xi - holding.xi
@@ -239,6 +240,8 @@ if io?
 	@socket = io.connect location.origin
 	msg 'Connecting...'
 	
+	socket.emit 'join', try localStorage.id
+	
 	socket.on 'position', ({pi, xi, yi, fx, fy})->
 		pieces[pi].position(xi, yi, fx, fy)
 	
@@ -265,13 +268,18 @@ if io?
 				p.move(xi, yi, facing_x, facing_y)
 			, 500
 	
-	socket.on 'you-join', (team)->
+	socket.on 'you-join', (team, id)->
 		assign_team(team)
 		msg 'Waiting for other player...'
+		try localStorage.id = id
 	
 	socket.on 'other-disconnected', ->
 		msg 'Other player disconnected!'
 		op_disconnected = true
+	
+	socket.on 'other-reconnected', ->
+		msg 'Other player reconnected!'
+		op_disconnected = false
 	
 	socket.on 'room-already-full', ->
 		msg 'There are already two players.', 'Or there were. The server currently only handles one game and two connections, ever.'
